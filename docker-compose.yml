@@ -1,7 +1,10 @@
 services:
   mongo:
-    image: mongo:8
+    image: bitnami/mongodb:latest
     restart: unless-stopped
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+      MONGODB_DATABASE: ${APP_MONGO_DB:-edtech_platform}
     ports:
       - "${MONGO_PORT:-27017}:27017"
     volumes:
@@ -28,6 +31,7 @@ services:
       context: ./platform/web
       dockerfile: Dockerfile
     image: edtech-platform-web:latest
+    platform: linux/amd64
     restart: unless-stopped
     depends_on:
       - platform-api
@@ -59,7 +63,8 @@ services:
       - ${LOCAL_OUTPUT_PATH:-./output}:/work/output
 
   preview:
-    image: node:22-alpine
+    image: node:22
+    platform: linux/amd64
     working_dir: /app
     command: sh -lc "npx --yes http-server /app -p ${FRONTEND_PORT:-4173} -c-1"
     ports:
