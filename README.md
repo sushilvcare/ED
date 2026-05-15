@@ -10,6 +10,12 @@ Convert a repository into teachable learning assets:
 - AI-generated playable videos per module (`.mp4`) + production kit
 - Structured report with APIs, DB model hints, auth signals, integrations, and deployment signals
 
+Platform MVP now includes:
+
+- Mongo-backed backend API for users/courses/orders/enrollments
+- Next.js frontend for landing/catalog/checkout/dashboard/admin
+- Docker Compose stack for generator + API + web + preview + Mongo
+
 ## How it works
 
 1. Parse repository folders/files.
@@ -60,10 +66,15 @@ Compose now controls both:
 
 - `repo2course` (artifact/video generation)
 - `preview` (frontend/static preview server)
+- `mongo` (database)
+- `platform-api` (backend API)
+- `platform-web` (Next.js app)
 
 Preview URL:
 
 - `http://127.0.0.1:4173/frontend/preview/index.html`
+- `http://127.0.0.1:3000` (platform web app)
+- `http://127.0.0.1:8080/health` (platform API health)
 
 `docker-compose.yml` is production-friendly by default:
 - non-root container runtime
@@ -114,6 +125,10 @@ You can also set runtime values from environment variables:
 - `NARRATION_STYLES` (comma-separated styles, e.g. `hindi-teacher-simple,english-neutral`)
 - `TTS_VOICE` (optional single fallback voice for all styles)
 - `TTS_VOICE_MAP` (optional per-style override: `style:voice,style:voice`)
+- `APP_JWT_SECRET`
+- `APP_MONGO_URL`
+- `APP_MONGO_DB`
+- `NEXT_PUBLIC_API_BASE_URL`
 
 `hindi-teacher-simple` mode adds code-teaching slides that explain line-by-line "kya" and "kyun".
 
@@ -169,6 +184,24 @@ Drop-in files:
 - error state
 - country -> locale fallback (`en-US`)
 - module video missing state
+
+## Platform backend API (MVP)
+
+Base URL: `http://localhost:8080/api/v1`
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/me`
+- `GET /courses`
+- `POST /courses` (admin/creator)
+- `PATCH /courses/{course_id}` (admin or owner)
+- `POST /orders/create`
+- `POST /orders/{order_id}/mark-paid` (admin placeholder before Stripe/Razorpay)
+- `GET /orders/my`
+- `GET /enrollments/my`
+- `GET /admin/summary` (admin)
+
+This is intentionally payment-provider agnostic so Stripe/Razorpay can be plugged in later.
 
 ## Next.js App Router ready
 
