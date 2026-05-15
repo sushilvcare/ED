@@ -1,0 +1,28 @@
+services:
+  repo2course:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: repo2course:latest
+    environment:
+      REPO_SOURCE: ${REPO_SOURCE:-/work/repo}
+      OUTPUT_DIR: ${OUTPUT_DIR:-/work/output}
+      MAX_SNIPPETS: ${MAX_SNIPPETS:-4}
+      MAX_LINES: ${MAX_LINES:-120}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GENERATE_VIDEOS: ${GENERATE_VIDEOS:-true}
+      NARRATION_STYLES: ${NARRATION_STYLES:-hindi-teacher-simple,english-neutral}
+      TTS_VOICE: ${TTS_VOICE:-}
+      TTS_VOICE_MAP: ${TTS_VOICE_MAP:-}
+    volumes:
+      - ${LOCAL_REPO_PATH:-.}:/work/repo:ro
+      - ${LOCAL_OUTPUT_PATH:-./output}:/work/output
+  preview:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -lc "npx --yes http-server /app -p ${FRONTEND_PORT:-4173} -c-1"
+    ports:
+      - "${FRONTEND_PORT:-4173}:${FRONTEND_PORT:-4173}"
+    volumes:
+      - ./:/app:ro

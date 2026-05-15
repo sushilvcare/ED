@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "repo-to-learning-videos"
+version = "0.1.0"
+description = "Turn a repository into teachable modules, scripts, diagrams, and quiz content."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "edge-tts>=7.2.1",
+  "Pillow>=10.4.0",
+]
+
+[project.scripts]
+repo2course = "repo_to_learning_videos.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

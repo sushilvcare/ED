@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Course Video Preview</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 24px;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      select, button {
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid #334155;
+        background: #1e293b;
+        color: #e2e8f0;
+      }
+      video {
+        width: min(100%, 1024px);
+        border-radius: 10px;
+        border: 1px solid #334155;
+        background: #020617;
+      }
+      .meta {
+        margin: 10px 0 16px;
+        color: #93c5fd;
+      }
+      .error {
+        color: #fca5a5;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Repo Course Video Preview</h1>
+    <div class="row">
+      <label>
+        Module
+        <select id="moduleSelect"></select>
+      </label>
+      <label>
+        Country
+        <select id="countrySelect"></select>
+      </label>
+      <button id="loadBtn">Load Video</button>
+    </div>
+    <div id="meta" class="meta"></div>
+    <div id="error" class="error"></div>
+    <video id="player" controls preload="metadata">
+      <source id="videoSource" src="" type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+
+    <script>
+      const MANIFEST_PATH = "/output/videos/locale-manifest.json";
+      const moduleSelect = document.getElementById("moduleSelect");
+      const countrySelect = document.getElementById("countrySelect");
+      const loadBtn = document.getElementById("loadBtn");
+      const meta = document.getElementById("meta");
+      const error = document.getElementById("error");
+      const player = document.getElementById("player");
+      const videoSource = document.getElementById("videoSource");
+
+      let manifest = null;
+
+      function normalizePath(path) {
+        if (path.startsWith("/work/output/videos/")) {
+          return path.replace("/work/output/videos/", "/output/videos/");
+        }
+        return path;
+      }
+
+      function fillSelect(select, values) {
+        select.innerHTML = "";
+        values.forEach((value) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
+      }
+
+      function loadVideo() {
+        error.textContent = "";
+        const moduleSlug = moduleSelect.value;
+        const countryCode = countrySelect.value;
+        const locale = manifest.country_to_locale[countryCode] || "en-US";
+        const videos = manifest.modules[moduleSlug] || {};
+        const resolved = videos[locale] || videos["en-US"] || null;
+
+        if (!resolved) {
+          meta.textContent = "";
+          error.textContent = "Video not available for selected module/country.";
+          player.removeAttribute("src");
+          return;
+        }
+
+        const src = normalizePath(resolved);
+        videoSource.src = src;
+        player.load();
+        meta.textContent = `Module: ${moduleSlug} | Country: ${countryCode} | Locale: ${locale}`;
+      }
+
+      async function init() {
+        try {
+          const response = await fetch(MANIFEST_PATH);
+          if (!response.ok) {
+            throw new Error(`Manifest fetch failed (${response.status})`);
+          }
+          manifest = await response.json();
+          fillSelect(moduleSelect, Object.keys(manifest.modules));
+          fillSelect(countrySelect, Object.keys(manifest.country_to_locale));
+          countrySelect.value = "IN";
+          loadVideo();
+        } catch (e) {
+          error.textContent = e.message || "Failed to initialize preview.";
+        }
+      }
+
+      loadBtn.addEventListener("click", loadVideo);
+      init();
+    </script>
+  </body>
+</html>
+
